@@ -73,6 +73,7 @@ public class SlaveProfile implements Runnable {
 
         if (args[0].equalsIgnoreCase("ping")) {
 
+            System.out.println("Sending response pong");
             writer.write("+PONG\r\n");
             writer.flush();
 
@@ -239,10 +240,11 @@ public class SlaveProfile implements Runnable {
                 rdbSize = Integer.parseInt(str.substring(1));
             }
             System.out.println("rdb file size: " + rdbSize);
-
+            StringBuilder string = new StringBuilder();
             while ((char) reader.read() != '*') {
-                reader.read();
+                string.append((char) reader.read());
             }
+            System.out.println(string);
 
             int commandArrayLength = Integer.parseInt(reader.readLine().trim());
             String[] commandArray = new String[commandArrayLength];

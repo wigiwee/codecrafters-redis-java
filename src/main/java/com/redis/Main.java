@@ -3,7 +3,6 @@ package com.redis;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 import com.redis.configAndUtils.Config;
 import com.redis.configAndUtils.RdbUtils;
@@ -14,7 +13,7 @@ import com.redis.serverProfile.SlaveProfile;
 
 public class Main {
 
-    public static void main(String[] args) throws UnknownHostException, IOException {
+    public static void main(String[] args) throws Exception {
 
         Utils.readConfiguration(args);
 
@@ -24,17 +23,17 @@ public class Main {
 
         // doing a asynchronous function call
         if (Config.role.equals(Roles.SLAVE) && Config.isHandshakeComplete == false) {
-            new Thread((new Runnable() {
-                public void run() {
-                    try {
-                        SlaveProfile.handshake();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            })).start();
+            SlaveProfile.handshake();
+        //     new Thread((new Runnable() {
+        //         public void run() {
+        //             try {
+        //                 SlaveProfile.handshake();
+        //             } catch (Exception e) {
+        //                 e.printStackTrace();
+        //             }
+        //         }
+        //     })).start();
         }
-
         Config.printConfig();
 
         System.out.println("Logs from your program will appear here!");
