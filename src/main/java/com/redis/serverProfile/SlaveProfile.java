@@ -232,7 +232,7 @@ public class SlaveProfile implements Runnable {
                 writer.flush();
             }
         } else {
-            if (commandBytesLength != -1) {
+            if (commandBytesLength == -1) {
                 writer.write("-ERROR: Unknown command or incorrect arguments\r\n");
                 writer.flush();
             }
@@ -318,20 +318,24 @@ public class SlaveProfile implements Runnable {
             while (true) {
                 String content;
                 while ((content = reader.readLine()) != null) {
+                    int commandLength = 0;
+                    commandLength += content.getBytes().length + 1;
+                    System.out.println("content" + content);
                     // Parse the RESP array
                     if (content.startsWith("*")) {
                         int numArgs = Integer.parseInt(content.substring(1));
                         String[] args = new String[numArgs];
                         for (i = 0; i < numArgs; i++) {
                             String lengthLine = reader.readLine();
+                            commandLength += lengthLine.getBytes().length + 1;
                             if (!lengthLine.startsWith("$")) {
-                                System.out.println("i got executed");
                                 writer.write("-ERROR: Invalid RESP format\r\n");
                                 writer.flush();
                                 continue;
                             }
                             int length = Integer.parseInt(lengthLine.substring(1));
                             args[i] = reader.readLine();
+                            commandLength += args[i].getBytes().length + 1;
                             if (args[i].length() != length) {
                                 writer.write("-ERROR: Length mismatch\r\n");
                                 writer.flush();
@@ -339,7 +343,8 @@ public class SlaveProfile implements Runnable {
                             }
                         }
                         System.out.println("MASTER: " + Arrays.toString(args));
-                        SlaveProfile.processCommand(writer, args, content.getBytes().length);
+                        System.out.println("command length " + commandLength);
+                        SlaveProfile.processCommand(writer, args, commandLength);
                     }
                 }
             }
