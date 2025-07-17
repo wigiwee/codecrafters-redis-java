@@ -73,14 +73,18 @@ public class SlaveProfile implements Runnable {
 
         if (args[0].equalsIgnoreCase("ping")) {
 
-            writer.write("+PONG\r\n");
-            writer.flush();
+            if (commandBytesLength == -1) {
+                writer.write("+PONG\r\n");
+                writer.flush();
+            }
 
         } else if (args[0].equalsIgnoreCase("echo") && numArgs == 2) {
 
             String message = args[1];
-            writer.write(Utils.bulkString(message));
-            writer.flush();
+            if (commandBytesLength == -1) {
+                writer.write(Utils.bulkString(message));
+                writer.flush();
+            }
 
         } else if (args[0].equalsIgnoreCase("set") && numArgs >= 3) {
             keyValueHashMap.put(args[1], args[2]);
@@ -91,76 +95,103 @@ public class SlaveProfile implements Runnable {
             } else if (numArgs == 3) {
                 keyValueHashMap.put(args[1], args[2]);
             }
-            writer.write("+OK\r\n");
-            writer.flush();
+            if (commandBytesLength == -1) {
+                writer.write("+OK\r\n");
+                writer.flush();
+            }
             // Utils.sendReplicaionCommands(args);
 
         } else if (args[0].equalsIgnoreCase("get") && numArgs == 2) {
             if (keyValueHashMap.containsKey(args[1])) {
                 if (keyExpiryHashMap.containsKey(args[1])) {
                     if (System.currentTimeMillis() < keyExpiryHashMap.get(args[1])) {
-                        writer.write(Utils.bulkString(keyValueHashMap.get(args[1])));
-                        writer.flush();
+                        if (commandBytesLength == -1) {
+                            writer.write(Utils.bulkString(keyValueHashMap.get(args[1])));
+                            writer.flush();
+                        }
                     } else {
                         keyExpiryHashMap.remove(args[1]);
                         keyValueHashMap.remove(args[1]);
-                        writer.write(Config.NIL);
-                        writer.flush();
+                        if (commandBytesLength == -1) {
+                            writer.write(Config.NIL);
+                            writer.flush();
+                        }
                     }
                 } else {
-                    writer.write(Utils.bulkString(keyValueHashMap.get(args[1])));
-                    writer.flush();
+                    if (commandBytesLength == -1) {
+                        writer.write(Utils.bulkString(keyValueHashMap.get(args[1])));
+                        writer.flush();
+                    }
                 }
             } else if (RdbUtils.RDBkeyValueHashMap.containsKey(args[1])) {
                 if (RdbUtils.RDBkeyExpiryHashMap.containsKey(args[1])) {
                     if (System.currentTimeMillis() < RdbUtils.RDBkeyExpiryHashMap.get(args[1])) {
-                        writer.write(Utils.bulkString(RdbUtils.RDBkeyValueHashMap.get(args[1])));
-                        writer.flush();
+                        if (commandBytesLength == -1) {
+                            writer.write(Utils.bulkString(RdbUtils.RDBkeyValueHashMap.get(args[1])));
+                            writer.flush();
+                        }
                     } else {
-                        writer.write(Config.NIL);
-                        writer.flush();
+                        if (commandBytesLength == -1) {
+                            writer.write(Config.NIL);
+                            writer.flush();
+                        }
                     }
                 } else {
-                    writer.write(Utils.bulkString(RdbUtils.RDBkeyValueHashMap.get(args[1])));
-                    writer.flush();
+                    if (commandBytesLength == -1) {
+                        writer.write(Utils.bulkString(RdbUtils.RDBkeyValueHashMap.get(args[1])));
+                        writer.flush();
+                    }
                 }
 
             } else {
-                writer.write(Config.NIL);
-                writer.flush();
+                if (commandBytesLength == -1) {
+                    writer.write(Config.NIL);
+                    writer.flush();
+                }
             }
 
         } else if (args[0].equalsIgnoreCase("config")) {
 
             if (args[1].equalsIgnoreCase("get")) {
                 if (args[2].equalsIgnoreCase("dir")) {
-                    writer.write(Utils.encodeArray(new String[] { "dir", Config.dir }));
-                    writer.flush();
+                    if (commandBytesLength != -1) {
+                        writer.write(Utils.encodeArray(new String[] { "dir", Config.dir }));
+                        writer.flush();
+                    }
                 } else if (args[2].equalsIgnoreCase("dbfilename")) {
-                    writer.write(Utils.encodeArray(new String[] { "dbfilename", Config.dbfilename }));
-                    writer.flush();
+                    if (commandBytesLength != -1) {
+                        writer.write(Utils.encodeArray(new String[] { "dbfilename", Config.dbfilename }));
+                        writer.flush();
+                    }
                 } else {
-                    writer.write("-ERROR: Unknown configuration key arguments\r\n");
-                    writer.flush();
+                    if (commandBytesLength != -1) {
+                        writer.write("-ERROR: Unknown configuration key arguments\r\n");
+                        writer.flush();
+                    }
                 }
 
             } else {
-
-                writer.write("-ERROR: Unknown command or incorrect arguments\r\n");
-                writer.flush();
+                if (commandBytesLength != -1) {
+                    writer.write("-ERROR: Unknown command or incorrect arguments\r\n");
+                    writer.flush();
+                }
 
             }
         } else if (args[0].equalsIgnoreCase("keys")) {
 
             if (Config.dbfilename.isEmpty() && Config.dir.isEmpty()) {
-                writer.write("-ERROR: RDB File not found\r\n");
-                writer.flush();
+                if (commandBytesLength != -1) {
+                    writer.write("-ERROR: RDB File not found\r\n");
+                    writer.flush();
+                }
             } else {
 
                 if (args[1].equals("*")) {
                     System.out.println("keys: " + Arrays.toString(RdbUtils.getKeys()));
-                    writer.write(Utils.encodeArray(RdbUtils.getKeys()));
-                    writer.flush();
+                    if (commandBytesLength != -1) {
+                        writer.write(Utils.encodeArray(RdbUtils.getKeys()));
+                        writer.flush();
+                    }
                 }
             }
 
@@ -173,11 +204,16 @@ public class SlaveProfile implements Runnable {
                 output.append("master_replid:").append("8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb");
                 output.append("\n");
                 output.append("master_repl_offset:").append("0");
-                writer.write(Utils.bulkString(output.toString()));
-                writer.flush();
+
+                if (commandBytesLength != -1) {
+                    writer.write(Utils.bulkString(output.toString()));
+                    writer.flush();
+                }
             } else {
-                writer.write(Utils.bulkString("role:slave"));
-                writer.flush();
+                if (commandBytesLength != -1) {
+                    writer.write(Utils.bulkString("role:slave"));
+                    writer.flush();
+                }
             }
 
         } else if (args[0].equalsIgnoreCase("replconf")) {
@@ -196,8 +232,10 @@ public class SlaveProfile implements Runnable {
                 writer.flush();
             }
         } else {
-            writer.write("-ERROR: Unknown command or incorrect arguments\r\n");
-            writer.flush();
+            if (commandBytesLength != -1) {
+                writer.write("-ERROR: Unknown command or incorrect arguments\r\n");
+                writer.flush();
+            }
             return;
         }
         if (commandBytesLength != -1) {
