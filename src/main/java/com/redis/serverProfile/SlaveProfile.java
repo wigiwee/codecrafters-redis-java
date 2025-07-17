@@ -73,7 +73,6 @@ public class SlaveProfile implements Runnable {
 
         if (args[0].equalsIgnoreCase("ping")) {
 
-            System.out.println("Sending response pong");
             writer.write("+PONG\r\n");
             writer.flush();
 
@@ -84,16 +83,17 @@ public class SlaveProfile implements Runnable {
             writer.flush();
 
         } else if (args[0].equalsIgnoreCase("set") && numArgs >= 3) {
-
             keyValueHashMap.put(args[1], args[2]);
             if (numArgs > 3) {
                 if (args[3].equalsIgnoreCase("px")) {
                     keyExpiryHashMap.put(args[1], System.currentTimeMillis() + Long.parseLong(args[4]));
                 }
+            } else if (numArgs == 3) {
+                keyValueHashMap.put(args[1], args[2]);
             }
             writer.write("+OK\r\n");
             writer.flush();
-            Utils.sendReplicaionCommands(args);
+            // Utils.sendReplicaionCommands(args);
 
         } else if (args[0].equalsIgnoreCase("get") && numArgs == 2) {
             if (keyValueHashMap.containsKey(args[1])) {
@@ -235,35 +235,45 @@ public class SlaveProfile implements Runnable {
             System.out.println("fullresync: " + reader.readLine());
 
             String str = reader.readLine();
+            System.out.println("str" + str);
+
             int rdbSize = 0;
             if (str.startsWith("$")) {
                 rdbSize = Integer.parseInt(str.substring(1));
             }
             System.out.println("rdb file size: " + rdbSize);
-            StringBuilder string = new StringBuilder();
-            while ((char) reader.read() != '*') {
-                string.append((char) reader.read());
+            int i = 0;
+            for (i = 0; i < rdbSize - 1; i++) {
+                reader.read();
             }
-            System.out.println(string);
+            System.out.println("did this 88 times");
+            // while ((char) reader.read() != '*') {
+            // reader.read();
+            // System.out.println(i++);
+            // }
 
-            int commandArrayLength = Integer.parseInt(reader.readLine().trim());
-            String[] commandArray = new String[commandArrayLength];
-            for (int i = 0; i < commandArrayLength; i++) {
-                String lengthString = reader.readLine();
-                int commandLength = 0;
-                if (lengthString.startsWith("$")) {
-                    commandLength = Integer.parseInt(lengthString.substring(1));
-                    commandArray[i] = reader.readLine();
-                    if (commandArray[i].length() != commandLength) {
-                        throw new Exception("invalid RESP string, length dosne't match");
-                    }
-                }
-            }
-            System.out.println("first command array : " + Arrays.toString(commandArray));
-            SlaveProfile.processCommand(writer, commandArray);
+            // String line = reader.readLine();
+            // System.out.println("this is line" + line);
+
+            // int commandArrayLength =
+            // Integer.parseInt((reader.readLine()).substring(1).trim());
+            // String[] commandArray = new String[commandArrayLength];
+            // for (i = 0; i < commandArrayLength; i++) {
+            // String lengthString = reader.readLine();
+            // int commandLength = 0;
+            // if (lengthString.startsWith("$")) {
+            // commandLength = Integer.parseInt(lengthString.substring(1));
+            // commandArray[i] = reader.readLine();
+            // if (commandArray[i].length() != commandLength) {
+            // throw new Exception("invalid RESP string, length dosne't match");
+            // }
+            // }
+            // }
+            // System.out.println("first command array : " + Arrays.toString(commandArray));
+            // SlaveProfile.processCommand(writer, commandArray);
 
             Config.isHandshakeComplete = true;
-
+            System.out.println("handshake got completed from the method");
             while (true) {
                 String content;
                 while ((content = reader.readLine()) != null) {
@@ -271,9 +281,10 @@ public class SlaveProfile implements Runnable {
                     if (content.startsWith("*")) {
                         int numArgs = Integer.parseInt(content.substring(1));
                         String[] args = new String[numArgs];
-                        for (int i = 0; i < numArgs; i++) {
+                        for (i = 0; i < numArgs; i++) {
                             String lengthLine = reader.readLine();
                             if (!lengthLine.startsWith("$")) {
+                                System.out.println("i got executed");
                                 writer.write("-ERROR: Invalid RESP format\r\n");
                                 writer.flush();
                                 continue;

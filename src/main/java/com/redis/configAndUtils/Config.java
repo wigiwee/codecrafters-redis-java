@@ -36,18 +36,14 @@ public class Config {
     public static Set<OutputStream> replicas = Collections.synchronizedSet(new HashSet<>());
 
     public static void printConfig() {
-        if(!dir.isEmpty()){
-            System.out.println("dir: " + dir);
-            System.out.println("dbfile: " + dbfilename);
-        }
+        System.out.println("dir: " + dir);
+        System.out.println("dbfile: " + dbfilename);
         System.out.println("server port: " + port);
         System.out.println("role: " + role);
         if (role.equals(Roles.SLAVE)) {
             System.out.println("\t hostname: " + hostName);
             System.out.println("\t hostport: " + hostPort);
         }
-        if(!version.isEmpty()){
-            System.out.println("version: " + version);
-        }
+        System.out.println("version: " + version);
     }
 }
