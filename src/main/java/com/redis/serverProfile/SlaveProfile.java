@@ -52,7 +52,7 @@ public class SlaveProfile implements Runnable {
                             continue;
                         }
                     }
-                    processCommand(writer, args);
+                    processCommand(writer, args, -1);
 
                 } else {
                     writer.write("-ERROR: Unknown command or incorrect arguments\r\n");
@@ -67,7 +67,7 @@ public class SlaveProfile implements Runnable {
         }
     }
 
-    public static void processCommand(BufferedWriter writer, String[] args) throws IOException {
+    public static void processCommand(BufferedWriter writer, String[] args, int commandBytesLength) throws IOException {
 
         int numArgs = args.length;
 
@@ -198,8 +198,11 @@ public class SlaveProfile implements Runnable {
         } else {
             writer.write("-ERROR: Unknown command or incorrect arguments\r\n");
             writer.flush();
+            return;
         }
-
+        if (commandBytesLength != -1) {
+            Config.bytesProcessedBySlave += commandBytesLength;
+        }
     }
 
     public static void handshake() throws Exception {
@@ -297,8 +300,8 @@ public class SlaveProfile implements Runnable {
                                 continue;
                             }
                         }
-                        System.out.println("Command received :" + Arrays.toString(args));
-                        SlaveProfile.processCommand(writer, args);
+                        System.out.println("MASTER: " + Arrays.toString(args));
+                        SlaveProfile.processCommand(writer, args, content.getBytes().length);
                     }
                 }
             }

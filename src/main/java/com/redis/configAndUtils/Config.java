@@ -31,7 +31,7 @@ public class Config {
 
     public static int bytesProcessedBySlave = 0;
 
-    public static int bytesProcessedByMaster = 0;
+    public static int bytesSentByMaster = 0;
 
     public static Set<OutputStream> replicas = Collections.synchronizedSet(new HashSet<>());
 

@@ -109,7 +109,9 @@ public class Utils {
     public static void sendReplicaionCommands(String[] commands) throws IOException {
 
         for (OutputStream replica : Config.replicas) {
-            replica.write(Utils.encodeCommandArray(commands).getBytes());
+            byte[] response = Utils.encodeCommandArray(commands).getBytes();
+            Config.bytesSentByMaster += response.length;
+            replica.write(response);
         }
     }
 }
