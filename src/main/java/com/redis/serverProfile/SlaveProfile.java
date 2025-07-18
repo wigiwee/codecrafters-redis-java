@@ -68,7 +68,7 @@ public class SlaveProfile implements Runnable {
     }
 
     public static void processCommand(BufferedWriter writer, String[] args, int commandBytesLength) throws IOException {
-
+        System.out.println("commandBytesLength: " + commandBytesLength);
         int numArgs = args.length;
 
         if (args[0].equalsIgnoreCase("ping")) {
@@ -154,24 +154,24 @@ public class SlaveProfile implements Runnable {
 
             if (args[1].equalsIgnoreCase("get")) {
                 if (args[2].equalsIgnoreCase("dir")) {
-                    if (commandBytesLength != -1) {
+                    if (commandBytesLength == -1) {
                         writer.write(Utils.encodeArray(new String[] { "dir", Config.dir }));
                         writer.flush();
                     }
                 } else if (args[2].equalsIgnoreCase("dbfilename")) {
-                    if (commandBytesLength != -1) {
+                    if (commandBytesLength == -1) {
                         writer.write(Utils.encodeArray(new String[] { "dbfilename", Config.dbfilename }));
                         writer.flush();
                     }
                 } else {
-                    if (commandBytesLength != -1) {
+                    if (commandBytesLength == -1) {
                         writer.write("-ERROR: Unknown configuration key arguments\r\n");
                         writer.flush();
                     }
                 }
 
             } else {
-                if (commandBytesLength != -1) {
+                if (commandBytesLength == -1) {
                     writer.write("-ERROR: Unknown command or incorrect arguments\r\n");
                     writer.flush();
                 }
@@ -180,7 +180,7 @@ public class SlaveProfile implements Runnable {
         } else if (args[0].equalsIgnoreCase("keys")) {
 
             if (Config.dbfilename.isEmpty() && Config.dir.isEmpty()) {
-                if (commandBytesLength != -1) {
+                if (commandBytesLength == -1) {
                     writer.write("-ERROR: RDB File not found\r\n");
                     writer.flush();
                 }
@@ -188,7 +188,7 @@ public class SlaveProfile implements Runnable {
 
                 if (args[1].equals("*")) {
                     System.out.println("keys: " + Arrays.toString(RdbUtils.getKeys()));
-                    if (commandBytesLength != -1) {
+                    if (commandBytesLength == -1) {
                         writer.write(Utils.encodeArray(RdbUtils.getKeys()));
                         writer.flush();
                     }
@@ -196,21 +196,21 @@ public class SlaveProfile implements Runnable {
             }
 
         } else if (args[0].equalsIgnoreCase("info")) {
-
-            if (Config.hostPort == -1 && Config.hostName.isBlank()) {
+            if (Config.hostPort != -1 && !Config.hostName.isBlank()) {
                 StringBuilder output = new StringBuilder();
-                output.append("role:master");
+                output.append("role:slave");
                 output.append("\n");
                 output.append("master_replid:").append("8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb");
                 output.append("\n");
                 output.append("master_repl_offset:").append("0");
 
-                if (commandBytesLength != -1) {
+                if (commandBytesLength == -1) {
+                    System.out.println("i am getting executed");
                     writer.write(Utils.bulkString(output.toString()));
                     writer.flush();
                 }
             } else {
-                if (commandBytesLength != -1) {
+                if (commandBytesLength == -1) {
                     writer.write(Utils.bulkString("role:slave"));
                     writer.flush();
                 }
@@ -238,10 +238,7 @@ public class SlaveProfile implements Runnable {
             return;
         }
         if (commandBytesLength != -1) {
-            System.out.println("from ProcessCommand: " + "commandlength: " + commandBytesLength + " initial "
-                    + Config.bytesProcessedBySlave);
             Config.bytesProcessedBySlave += commandBytesLength;
-            System.out.println("from ProcessCommand: " + Config.bytesProcessedBySlave);
         }
     }
 
@@ -270,7 +267,7 @@ public class SlaveProfile implements Runnable {
             System.out.println(reader.readLine());
 
             // configuring replica to send ACK
-            // writer.write(RESP2format("REPLCONF GETACK *"));
+            // writer.write(Utils.RESP2format("REPLCONF GETACK *"));
             // writer.flush();
 
             writer.write(Utils.RESP2format("PSYNC ? -1"));
@@ -314,12 +311,14 @@ public class SlaveProfile implements Runnable {
             // SlaveProfile.processCommand(writer, commandArray);
 
             Config.isHandshakeComplete = true;
-
-            System.out.println("received some command : " + Config.bytesProcessedBySlave);
+            System.out.println("i got executed here 222");
+            // System.out.println("received some command : " +
+            // Config.bytesProcessedBySlave);
             Config.bytesProcessedBySlave = 0;
             while (true) {
                 String reqLength;
                 while ((reqLength = reader.readLine()) != null) {
+                    System.out.println("reqLength: " + reqLength);
                     int commandLength = 0;
                     commandLength += reqLength.getBytes().length + 2;
                     // Parse the RESP array
