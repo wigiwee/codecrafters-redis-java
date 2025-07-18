@@ -197,7 +197,7 @@ public class MasterProfile implements Runnable {
 
                         Config.replicas.add(out);
                     } else if (args[0].equalsIgnoreCase("wait")) {
-                        writer.write(Utils.encodeNumber("0"));
+                        writer.write(Utils.encodeNumber(Integer.toString(Config.replicas.size())));
                         writer.flush();
                     } else {
 
