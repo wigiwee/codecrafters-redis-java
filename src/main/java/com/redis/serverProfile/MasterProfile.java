@@ -196,6 +196,9 @@ public class MasterProfile implements Runnable {
                         Config.isHandshakeComplete = true;
 
                         Config.replicas.add(out);
+                    } else if (args[0].equalsIgnoreCase("wait")) {
+                        writer.write(Utils.encodeNumber("0"));
+                        writer.flush();
                     } else {
 
                         writer.write("-ERROR: Unknown command or incorrect arguments\r\n");

@@ -73,6 +73,10 @@ public class Utils {
         return "$" + str.length() + Config.CRLF + str + Config.CRLF;
     }
 
+    public static String encodeNumber(String number) {
+        return ":" + number + Config.CRLF;
+    }
+
     public static String RESP2format(String str) {
         String[] strArr = str.split(" ");
         StringBuilder output = new StringBuilder();
