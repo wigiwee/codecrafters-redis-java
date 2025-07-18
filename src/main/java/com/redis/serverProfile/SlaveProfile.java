@@ -30,21 +30,21 @@ public class SlaveProfile implements Runnable {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));) {
 
-            String content;
+            String reqLength;
 
-            while ((content = reader.readLine()) != null) {
+            while ((reqLength = reader.readLine()) != null) {
 
-                if (content.startsWith("*")) {
-                    int numArgs = Integer.parseInt(content.substring(1));
+                if (reqLength.startsWith("*")) {
+                    int numArgs = Integer.parseInt(reqLength.substring(1));
                     String[] args = new String[numArgs];
                     for (int i = 0; i < numArgs; i++) {
-                        String lengthLine = reader.readLine();
-                        if (!lengthLine.startsWith("$")) {
+                        String lineLength = reader.readLine();
+                        if (!lineLength.startsWith("$")) {
                             writer.write("-ERROR: Invalid RESP format\r\n");
                             writer.flush();
                             continue;
                         }
-                        int length = Integer.parseInt(lengthLine.substring(1));
+                        int length = Integer.parseInt(lineLength.substring(1));
                         args[i] = reader.readLine();
                         if (args[i].length() != length) {
                             writer.write("-ERROR: Length mismatch\r\n");
@@ -228,7 +228,6 @@ public class SlaveProfile implements Runnable {
             } else if (args[1].equalsIgnoreCase("getack")) {
                 String command = Utils.RESP2format("REPLCONF ACK " + Config.bytesProcessedBySlave);
                 writer.write(command);
-                Config.bytesProcessedBySlave = command.length() / 2;
                 writer.flush();
             }
         } else {
@@ -239,7 +238,10 @@ public class SlaveProfile implements Runnable {
             return;
         }
         if (commandBytesLength != -1) {
+            System.out.println("from ProcessCommand: " + "commandlength: " + commandBytesLength + " initial "
+                    + Config.bytesProcessedBySlave);
             Config.bytesProcessedBySlave += commandBytesLength;
+            System.out.println("from ProcessCommand: " + Config.bytesProcessedBySlave);
         }
     }
 
@@ -276,7 +278,6 @@ public class SlaveProfile implements Runnable {
             System.out.println("fullresync: " + reader.readLine());
 
             String str = reader.readLine();
-            System.out.println("str" + str);
 
             int rdbSize = 0;
             if (str.startsWith("$")) {
@@ -287,7 +288,6 @@ public class SlaveProfile implements Runnable {
             for (i = 0; i < rdbSize - 1; i++) {
                 reader.read();
             }
-            System.out.println("did this 88 times");
             // while ((char) reader.read() != '*') {
             // reader.read();
             // System.out.println(i++);
@@ -314,28 +314,29 @@ public class SlaveProfile implements Runnable {
             // SlaveProfile.processCommand(writer, commandArray);
 
             Config.isHandshakeComplete = true;
-            System.out.println("handshake got completed from the method");
+
+            System.out.println("received some command : " + Config.bytesProcessedBySlave);
+            Config.bytesProcessedBySlave = 0;
             while (true) {
-                String content;
-                while ((content = reader.readLine()) != null) {
+                String reqLength;
+                while ((reqLength = reader.readLine()) != null) {
                     int commandLength = 0;
-                    commandLength += content.getBytes().length + 1;
-                    System.out.println("content" + content);
+                    commandLength += reqLength.getBytes().length + 2;
                     // Parse the RESP array
-                    if (content.startsWith("*")) {
-                        int numArgs = Integer.parseInt(content.substring(1));
+                    if (reqLength.startsWith("*")) {
+                        int numArgs = Integer.parseInt(reqLength.substring(1));
                         String[] args = new String[numArgs];
                         for (i = 0; i < numArgs; i++) {
-                            String lengthLine = reader.readLine();
-                            commandLength += lengthLine.getBytes().length + 1;
-                            if (!lengthLine.startsWith("$")) {
+                            String lineLength = reader.readLine();
+                            commandLength += lineLength.getBytes().length + 2;
+                            if (!lineLength.startsWith("$")) {
                                 writer.write("-ERROR: Invalid RESP format\r\n");
                                 writer.flush();
                                 continue;
                             }
-                            int length = Integer.parseInt(lengthLine.substring(1));
+                            int length = Integer.parseInt(lineLength.substring(1));
                             args[i] = reader.readLine();
-                            commandLength += args[i].getBytes().length + 1;
+                            commandLength += length + 2;
                             if (args[i].length() != length) {
                                 writer.write("-ERROR: Length mismatch\r\n");
                                 writer.flush();

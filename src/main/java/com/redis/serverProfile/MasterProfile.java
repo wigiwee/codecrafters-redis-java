@@ -19,7 +19,7 @@ import com.redis.configAndUtils.Utils;
 public class MasterProfile implements Runnable {
 
     public Socket clientSocket;
-  
+
     public static ConcurrentHashMap<String, String> keyValueHashMap = new ConcurrentHashMap<>();
     public static ConcurrentHashMap<String, Long> keyExpiryHashMap = new ConcurrentHashMap<>();
 
@@ -178,9 +178,8 @@ public class MasterProfile implements Runnable {
                             writer.write("+OK" + Config.CRLF);
                             writer.flush();
                         } else if (args[1].equalsIgnoreCase("getack")) {
-                            String command = Utils.RESP2format("REPLCONF ACK " + Config.bytesProcessedBySlave);
+                            String command = Utils.RESP2format("REPLCONF ACK " + Config.bytesSentByMaster);
                             writer.write(command);
-                            Config.bytesProcessedBySlave = command.length() / 2;
                             writer.flush();
                         }
 

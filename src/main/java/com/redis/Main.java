@@ -34,7 +34,6 @@ public class Main {
                 }
             })).start();
         }
-        System.out.println("handshake complete");
 
         Config.printConfig();
 
@@ -56,7 +55,6 @@ public class Main {
 
                 } else {
                     SlaveProfile slaveRequestHandler = new SlaveProfile(clientSocket);
-                    System.out.println("slave profile starting");
                     Thread.startVirtualThread(slaveRequestHandler);
 
                 }
